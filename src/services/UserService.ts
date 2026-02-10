@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { Role } from '@prisma/client' // Import Role Enum
 import { UserRepository } from '../repositories/UserRepository'
 import { LoginRequest, RegisterRequest, AuthResponse } from '../types'
 import { validateEmail, validatePassword } from '../utils/validators'
@@ -13,10 +14,10 @@ export class UserService {
   async register(data: RegisterRequest): Promise<AuthResponse> {
     try {
       // Validasi input
-      if (!data.email || !data.password || !data.name) {
+      if (!data.email || !data.password || !data.name || !data.role) {
         return {
           success: false,
-          message: 'Email, password, dan name wajib diisi',
+          message: 'Email, password, name, dan role wajib diisi',
         }
       }
 
@@ -36,6 +37,14 @@ export class UserService {
         }
       }
 
+      // Validasi Role (Optional check to ensure valid Enum)
+      if (!Object.values(Role).includes(data.role as Role)) {
+         return {
+           success: false,
+           message: 'Role tidak valid (Gunakan: ADMIN, MASTER_ADMIN, etc)',
+         }
+      }
+
       // Cek email sudah terdaftar
       const existingUser = await this.userRepository.findByEmail(data.email)
       if (existingUser) {
@@ -45,14 +54,13 @@ export class UserService {
         }
       }
 
-      // Hash password
-      const hashedPassword = await bcrypt.hash(data.password, 10)
-
-      // Create user
+      // Create user 
+      // NOTE: We do NOT hash here anymore, the Repository handles it.
       const user = await this.userRepository.create(
         data.email,
-        hashedPassword,
-        data.name
+        data.password, // Send raw password
+        data.name,
+        data.role as Role // Pass the role
       )
 
       // Generate token
@@ -101,6 +109,7 @@ export class UserService {
       }
 
       // Verifikasi password
+      // NOTE: We keep bcrypt here because we need to compare input vs DB hash
       const isPasswordValid = await bcrypt.compare(data.password, user.password)
       if (!isPasswordValid) {
         return {
