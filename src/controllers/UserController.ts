@@ -5,8 +5,10 @@ import { RegisterRequest, LoginRequest } from '../types'
 export class UserController {
   private userService = new UserService()
 
+  // FIX: Use Arrow Functions (= async (...) =>) to keep 'this' bound
+
   // POST /auth/register
-  async register(req: Request, res: Response) {
+  register = async (req: Request, res: Response) => {
     const data: RegisterRequest = req.body
     const result = await this.userService.register(data)
 
@@ -18,7 +20,7 @@ export class UserController {
   }
 
   // POST /auth/login
-  async login(req: Request, res: Response) {
+  login = async (req: Request, res: Response) => {
     const data: LoginRequest = req.body
     const result = await this.userService.login(data)
 
@@ -30,7 +32,7 @@ export class UserController {
   }
 
   // GET /users
-  async getAllUsers(req: Request, res: Response) {
+  getAllUsers = async (req: Request, res: Response) => {
     const result = await this.userService.getAllUsers()
 
     if (result.success) {
@@ -41,9 +43,19 @@ export class UserController {
   }
 
   // GET /users/:id
-  async getUserById(req: Request, res: Response) {
+  getUserById = async (req: Request, res: Response) => {
     const { id } = req.params
-    const result = await this.userService.getUserById(parseInt(id))
+    const parsedId = parseInt(id)
+
+    // Minor Fix: Handle non-number IDs safely
+    if (isNaN(parsedId)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Invalid ID format" 
+      })
+    }
+
+    const result = await this.userService.getUserById(parsedId)
 
     if (result.success) {
       return res.status(200).json(result)
