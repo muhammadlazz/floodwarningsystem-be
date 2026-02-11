@@ -1,7 +1,12 @@
+import { Role, Agency } from '@prisma/client'
+
+export { Role, Agency }
+
 export interface UserPayload {
   id: number
   email: string
-  role: string
+  role: Role
+  agency?: Agency | null
 }
 
 export interface LoginRequest {
@@ -13,6 +18,16 @@ export interface RegisterRequest {
   email: string
   password: string
   name: string
+  role?: Role
+  agency?: Agency
+}
+
+export interface CreateUserRequest {
+  email: string
+  password: string
+  name: string
+  role: Role
+  agency?: Agency
 }
 
 export interface AuthResponse {
@@ -22,7 +37,8 @@ export interface AuthResponse {
     id: number
     email: string
     name: string
-    role: string
+    role: Role
+    agency?: Agency | null
   }
   token?: string
 }

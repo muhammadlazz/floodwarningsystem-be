@@ -25,8 +25,10 @@ export const authMiddleware = (
       })
     }
 
-    const jwtSecret = process.env.JWT_SECRET || 'default-secret'
-    const decoded = jwt.verify(token, jwtSecret) as UserPayload
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET environment variable is required')
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET) as UserPayload
 
     req.user = decoded
     next()

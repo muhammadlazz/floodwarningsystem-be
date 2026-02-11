@@ -51,4 +51,30 @@ export class UserController {
 
     return res.status(404).json(result)
   }
+
+  // POST /users (Restricted)
+  async createUser(req: Request, res: Response) {
+    const requestor = (req as any).user
+    const data = req.body
+    const result = await this.userService.createUser(data, requestor)
+
+    if (result.success) {
+      return res.status(201).json(result)
+    }
+
+    return res.status(403).json(result)
+  }
+
+  // DELETE /users/:id (Restricted)
+  async deleteUser(req: Request, res: Response) {
+    const requestor = (req as any).user
+    const { id } = req.params
+    const result = await this.userService.deleteUser(parseInt(id), requestor)
+
+    if (result.success) {
+      return res.status(200).json(result)
+    }
+
+    return res.status(403).json(result)
+  }
 }

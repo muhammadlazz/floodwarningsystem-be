@@ -17,4 +17,12 @@ router.get('/users/:id', authMiddleware, (req, res) =>
   userController.getUserById(req, res)
 )
 
+router.post('/users', authMiddleware, (req, res) =>
+  userController.createUser(req, res)
+)
+
+router.delete('/users/:id', authMiddleware, (req, res) =>
+  userController.deleteUser(req, res)
+)
+
 export default router

@@ -11,9 +11,23 @@ model User {
   email     String   @unique
   password  String
   name      String
-  role      String   @default("user")
+  role      Role     @default(ADMIN)
+  agency    Agency?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  SUPER_ADMIN
+  MASTER_ADMIN
+  ADMIN
+}
+
+enum Agency {
+  BBWS
+  BMKG
+  BPBD
+  SYSTEM
 }
 
 model FloodAlert {
