@@ -1,30 +1,21 @@
-import { prisma } from '../config/database'
-import { Role, Agency } from '../types'
+import { prisma } from '../config/database';
+import { Role } from '@prisma/client'; 
+import bcrypt from 'bcrypt';
 
 export class UserRepository {
+  
   // Find user by email
   async findByEmail(email: string) {
     return await prisma.user.findUnique({
       where: { email },
-    })
+    });
   }
 
   // Find user by ID
   async findById(id: number) {
     return await prisma.user.findUnique({
       where: { id },
-    })
-  }
-
-  // Find user by Role and Agency
-  async findByRoleAndAgency(role: Role, agency: Agency) {
-    // @ts-ignore: Prisma client might not be generated yet
-    return await prisma.user.findFirst({
-      where: {
-        role,
-        agency
-      }
-    })
+    });
   }
 
   // Get all users
@@ -38,19 +29,21 @@ export class UserRepository {
         agency: true,
         createdAt: true,
       },
-    })
+    });
   }
 
-  // Create user
-  async create(email: string, password: string, name: string, role: Role, agency?: Agency) {
-    // @ts-ignore: Prisma client might not be generated yet
+  // Create user (Updated to accept 'role' as an argument)
+  async create(email: string, password: string, name: string, role: Role) {
+    // 1. Hash the password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
     return await prisma.user.create({
       data: {
         email,
-        password,
+        password: hashedPassword,
         name,
-        role,
-        agency,
+        role: role, // <--- Now uses the dynamic input
       },
       select: {
         id: true,
@@ -59,7 +52,7 @@ export class UserRepository {
         role: true,
         agency: true,
       },
-    })
+    });
   }
 
   // Update user
@@ -74,13 +67,13 @@ export class UserRepository {
         role: true,
         agency: true,
       },
-    })
+    });
   }
 
   // Delete user
   async delete(id: number) {
     return await prisma.user.delete({
       where: { id },
-    })
+    });
   }
 }

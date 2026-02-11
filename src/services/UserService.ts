@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
+import { Role } from '@prisma/client' // Import Role Enum
 import { UserRepository } from '../repositories/UserRepository'
 import { LoginRequest, CreateUserRequest, AuthResponse, UserPayload, Role, Agency, RegisterRequest } from '../types'
 import { validateEmail, validatePassword } from '../utils/validators'
@@ -19,7 +20,7 @@ export class UserService {
   // Create User (Restricted Access)
   async createUser(data: CreateUserRequest, requestor: UserPayload): Promise<AuthResponse> {
     try {
-      // 1. Validasi Input Dasar
+      // Validasi input
       if (!data.email || !data.password || !data.name || !data.role) {
         return {
           success: false,
@@ -27,47 +28,23 @@ export class UserService {
         }
       }
 
-      // 2. Validasi Hierarchy & Authorization
-      if (requestor.role === Role.SUPER_ADMIN) {
-        // Super Admin Rules
-        if (data.role === Role.MASTER_ADMIN) {
-           if (!data.agency) {
-             return { success: false, message: 'Agency wajib diisi untuk Master Admin' }
-           }
-           // Check existing Master Admin for this agency
-           const existingMaster = await this.userRepository.findByRoleAndAgency(Role.MASTER_ADMIN, data.agency)
-           if (existingMaster) {
-               return { success: false, message: `Master Admin untuk ${data.agency} sudah ada` }
-           }
-        }
-      } else if (requestor.role === Role.MASTER_ADMIN) {
-        // Master Admin Rules
-        if (data.role !== Role.ADMIN) {
-            return { success: false, message: 'Master Admin hanya bisa membuat Admin biasa' }
-        }
-
-        // Strict Check: Agency must match requestor if provided
-        if (data.agency && data.agency !== requestor.agency) {
-             return { success: false, message: 'Anda tidak dapat membuat user untuk agency lain' }
-        }
-
-        // Force agency to match requestor
-        if (requestor.agency) {
-          data.agency = requestor.agency
-        } else {
-           // Should not happen if data integrity is maintained
-           return { success: false, message: 'Agency Master Admin tidak valid' }
-        }
-      } else {
-        return { success: false, message: 'Anda tidak memiliki akses untuk membuat user' }
-      }
-
-      // 3. Validasi Email & Password
+      // Validasi email format
       if (!validateEmail(data.email)) {
         return { success: false, message: 'Format email tidak valid' }
       }
       if (!validatePassword(data.password)) {
-        return { success: false, message: 'Password minimal 6 karakter' }
+        return {
+          success: false,
+          message: 'Password minimal 6 karakter',
+        }
+      }
+
+      // Validasi Role (Optional check to ensure valid Enum)
+      if (!Object.values(Role).includes(data.role as Role)) {
+         return {
+           success: false,
+           message: 'Role tidak valid (Gunakan: ADMIN, MASTER_ADMIN, etc)',
+         }
       }
 
       // 4. Cek Email Duplikat
@@ -76,14 +53,24 @@ export class UserService {
         return { success: false, message: 'Email sudah terdaftar' }
       }
 
-      // 5. Hash Password & Create
-      const hashedPassword = await bcrypt.hash(data.password, 10)
+      // Create user 
+      // NOTE: We do NOT hash here anymore, the Repository handles it.
       const user = await this.userRepository.create(
         data.email,
-        hashedPassword,
+        data.password, // Send raw password
         data.name,
-        data.role,
-        data.agency
+        data.role as Role // Pass the role
+      )
+
+      // Generate token
+      const token = jwt.sign(
+        {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+        },
+        this.jwtSecret,
+        { expiresIn: this.jwtExpire } as jwt.SignOptions
       )
 
       return {
@@ -150,6 +137,7 @@ export class UserService {
       }
 
       // Verifikasi password
+      // NOTE: We keep bcrypt here because we need to compare input vs DB hash
       const isPasswordValid = await bcrypt.compare(data.password, user.password)
       if (!isPasswordValid) {
         return {

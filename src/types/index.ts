@@ -1,12 +1,9 @@
-import { Role, Agency } from '@prisma/client'
-
-export { Role, Agency }
+import { Role } from '@prisma/client' // <--- Import the Enum from Prisma
 
 export interface UserPayload {
   id: number
   email: string
-  role: Role
-  agency?: Agency | null
+  role: Role // <--- Updated to strict Enum
 }
 
 export interface LoginRequest {
@@ -18,16 +15,7 @@ export interface RegisterRequest {
   email: string
   password: string
   name: string
-  role?: Role
-  agency?: Agency
-}
-
-export interface CreateUserRequest {
-  email: string
-  password: string
-  name: string
-  role: Role
-  agency?: Agency
+  role: Role // <--- Added this to fix your error
 }
 
 export interface AuthResponse {
@@ -37,8 +25,7 @@ export interface AuthResponse {
     id: number
     email: string
     name: string
-    role: Role
-    agency?: Agency | null
+    role: Role // <--- Updated to strict Enum
   }
   token?: string
 }

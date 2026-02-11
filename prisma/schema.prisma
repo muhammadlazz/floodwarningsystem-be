@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
+  engineType = "library"
 }
 
 datasource db {
@@ -11,23 +12,14 @@ model User {
   email     String   @unique
   password  String
   name      String
-  role      Role     @default(ADMIN)
-  agency    Agency?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
+  
+  // Fix: This correctly references the Agency enum below
+  agency    Agency?  
+  role      Role     @default(ADMIN)
 
-enum Role {
-  SUPER_ADMIN
-  MASTER_ADMIN
-  ADMIN
-}
-
-enum Agency {
-  BBWS
-  BMKG
-  BPBD
-  SYSTEM
+  @@map("users")
 }
 
 model FloodAlert {
@@ -39,4 +31,30 @@ model FloodAlert {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@map("flood_alerts")
+}
+
+model Feedback {
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String
+  description String
+  whatsapp    String
+  createdAt   DateTime @default(now())
+
+  @@map("feedbacks")
+}
+
+enum Agency {
+  BBWS
+  BMKG
+  BPBD
+  SYSTEM
+}
+
+enum Role {
+  SUPER_ADMIN
+  MASTER_ADMIN
+  ADMIN
 }
