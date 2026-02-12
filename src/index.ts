@@ -1,19 +1,26 @@
 import 'dotenv/config';
 import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
 import { prisma } from './config/database';
 import userRoutes from './routes/userRoutes';
 import feedbackRoutes from './routes/feedbackRoutes';
 
 const app = express();
-const PORT = process.env.PORT || 3000; // Use env port if available
+const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(express.json());
+// Security Middleware
+app.use(helmet());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+app.use(express.json({ limit: '10kb' }));
 
 // Routes
-// Consider adding a version prefix like '/api'
-app.use('/api', userRoutes)
-app.use('/api/feedback', feedbackRoutes)
+app.use('/api', userRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 // Health check
 app.get('/api/health', async (req, res) => {
@@ -28,7 +35,7 @@ app.get('/api/health', async (req, res) => {
 
 // Start server
 const server = app.listen(PORT, () => {
-  console.log(`✅ Server berjalan di http://localhost:${PORT}`);
+  console.log(`Server running at http://localhost:${PORT}`);
 });
 
 // Handle Graceful Shutdown

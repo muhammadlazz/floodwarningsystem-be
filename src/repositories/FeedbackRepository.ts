@@ -1,4 +1,4 @@
-import { prisma } from '../config/database'// Adjust path as needed
+import { prisma } from '../config/database';
 
 export class FeedbackRepository {
   // Create new feedback

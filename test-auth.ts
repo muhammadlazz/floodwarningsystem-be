@@ -6,10 +6,10 @@ import { prisma } from './src/config/database'
 async function testAuth() {
   const userService = new UserService()
 
-  console.log('🚀 Starting Hierarchy Test...\n')
+  console.log('Starting Hierarchy Test...\n')
 
   // Clean up previous test runs
-  console.log('🧹 Cleaning up previous test data...')
+  console.log('Cleaning up previous test data...')
   try {
       // Delete Master Admin for BBWS if exists
       const existingMaster = await prisma.user.findFirst({
@@ -26,20 +26,20 @@ async function testAuth() {
   } catch (e) {
       console.log('   - Cleanup warning:', e)
   }
-  console.log('✅ Cleanup Complete\n')
+  console.log('Cleanup Complete\n')
 
   // 1. Login as Super Admin (Seeded)
-  console.log('1️⃣  Logging in as Super Admin...')
+  console.log('[1] Logging in as Super Admin...')
   const superLogin = await userService.login({
     email: 'superadmin@system.com',
     password: 'password123',
   })
 
   if (!superLogin.success || !superLogin.token) {
-    console.error('❌ Super Admin Login Failed:', superLogin.message)
+    console.error('FAIL: Super Admin Login Failed:', superLogin.message)
     process.exit(1)
   }
-  console.log('✅ Super Admin Logged In\n')
+  console.log('OK: Super Admin Logged In\n')
   const superToken = superLogin.token
   // Mock Requestor for internal service calls (simulating middleware)
   const superUserPayload = { 
@@ -50,7 +50,7 @@ async function testAuth() {
   }
 
   // 2. Create Master Admin BBWS (by Super Admin)
-  console.log('2️⃣  Creating Master Admin BBWS...')
+  console.log('[2] Creating Master Admin BBWS...')
   const masterEmail = `master.bbws.${Date.now()}@test.com`
   const createMaster = await userService.createUser({
     email: masterEmail,
@@ -61,24 +61,24 @@ async function testAuth() {
   }, superUserPayload)
 
   if (!createMaster.success) {
-    console.error('❌ Create Master Admin Failed:', createMaster.message)
+    console.error('FAIL: Create Master Admin Failed:', createMaster.message)
     // If failed (maybe due to race condition or other issue), we can't proceed
     process.exit(1)
   } else {
-    console.log('✅ Master Admin BBWS Created')
+    console.log('OK: Master Admin BBWS Created')
   }
   console.log('')
 
   // 3. Login as Master Admin
   if (createMaster.success) {
-    console.log('3️⃣  Logging in as Master Admin...')
+    console.log('[3] Logging in as Master Admin...')
     const masterLogin = await userService.login({
       email: masterEmail,
       password: 'password123'
     })
 
     if (masterLogin.success && masterLogin.token) {
-       console.log('✅ Master Admin Logged In\n')
+       console.log('OK: Master Admin Logged In\n')
        
        const masterUserPayload = {
           id: masterLogin.data!.id,
@@ -88,7 +88,7 @@ async function testAuth() {
        }
 
        // 4. Create Admin BBWS (by Master Admin)
-       console.log('4️⃣  Creating Admin BBWS (by Master Admin)...')
+       console.log('[4] Creating Admin BBWS (by Master Admin)...')
        const adminEmail = `admin.bbws.${Date.now()}@test.com`
        const createAdmin = await userService.createUser({
          email: adminEmail,
@@ -100,13 +100,13 @@ async function testAuth() {
        }, masterUserPayload)
 
        if (createAdmin.success) {
-         console.log('✅ Admin BBWS Created')
+         console.log('OK: Admin BBWS Created')
        } else {
-         console.error('❌ Create Admin BBWS Failed:', createAdmin.message)
+         console.error('FAIL: Create Admin BBWS Failed:', createAdmin.message)
        }
 
        // 5. Try to Create Admin BMKG (Should Fail)
-       console.log('\n5️⃣  Trying to Create Admin BMKG (Should Fail)...')
+       console.log('\n[5] Trying to Create Admin BMKG (Should Fail)...')
        const failAdmin = await userService.createUser({
           email: `fail.${Date.now()}@test.com`,
           password: 'password123',
@@ -116,15 +116,15 @@ async function testAuth() {
        }, masterUserPayload)
 
        if (!failAdmin.success) {
-         console.log('✅ Creation blocked as expected:', failAdmin.message)
+         console.log('OK: Creation blocked as expected:', failAdmin.message)
        } else {
-         console.error('❌ Security Breach: Master Admin created user for different agency!')
+         console.error('FAIL: Security Breach: Master Admin created user for different agency!')
        }
 
     }
   }
 
-  console.log('\n🏁 Test Complete')
+  console.log('\nTest Complete')
   process.exit(0)
 }
 

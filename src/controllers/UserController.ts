@@ -65,10 +65,10 @@ export class UserController {
   }
 
   // POST /users (Restricted)
-  async createUser(req: Request, res: Response) {
-    const requestor = (req as any).user
+  createUser = async (req: Request, res: Response) => {
+    const requestor = req.user
     const data = req.body
-    const result = await this.userService.createUser(data, requestor)
+    const result = await this.userService.createUser(data, requestor!)
 
     if (result.success) {
       return res.status(201).json(result)
@@ -78,10 +78,19 @@ export class UserController {
   }
 
   // DELETE /users/:id (Restricted)
-  async deleteUser(req: Request, res: Response) {
-    const requestor = (req as any).user
+  deleteUser = async (req: Request, res: Response) => {
+    const requestor = req.user
     const { id } = req.params
-    const result = await this.userService.deleteUser(parseInt(id), requestor)
+    const parsedId = parseInt(id)
+
+    if (isNaN(parsedId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid ID format',
+      })
+    }
+
+    const result = await this.userService.deleteUser(parsedId, requestor!)
 
     if (result.success) {
       return res.status(200).json(result)

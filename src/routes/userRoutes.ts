@@ -25,13 +25,7 @@ router.post('/auth/login', authLimiter, userController.login)
 // --- Protected Routes ---
 router.get('/users', authMiddleware, userController.getAllUsers)
 router.get('/users/:id', authMiddleware, userController.getUserById)
-
-router.post('/users', authMiddleware, (req, res) =>
-  userController.createUser(req, res)
-)
-
-router.delete('/users/:id', authMiddleware, (req, res) =>
-  userController.deleteUser(req, res)
-)
+router.post('/users', authMiddleware, userController.createUser)
+router.delete('/users/:id', authMiddleware, userController.deleteUser)
 
 export default router

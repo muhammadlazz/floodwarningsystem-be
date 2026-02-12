@@ -6,8 +6,16 @@ import { validateEmail, validatePassword } from '../utils/validators'
 
 export class UserService {
   private userRepository = new UserRepository()
-  private jwtSecret = process.env.JWT_SECRET || 'default-secret'
+  private jwtSecret: string
   private jwtExpire = process.env.JWT_EXPIRE || '7d'
+
+  constructor() {
+    const secret = process.env.JWT_SECRET
+    if (!secret) {
+      throw new Error('JWT_SECRET environment variable is required')
+    }
+    this.jwtSecret = secret
+  }
 
   // Create User (Restricted Access)
   async createUser(data: CreateUserRequest, requestor: UserPayload): Promise<AuthResponse> {
@@ -25,7 +33,7 @@ export class UserService {
       if (!validatePassword(data.password)) {
         return {
           success: false,
-          message: 'Password minimal 6 karakter',
+          message: 'Password minimal 8 karakter, harus mengandung huruf dan angka',
         }
       }
 
@@ -184,13 +192,22 @@ export class UserService {
     }
   }
 
-  // Register user (Public/Legacy - For now creates ADMIN with no agency, or maybe disable it?)
-  // Keeping it for now but maybe restricting role to ADMIN default
+  // Register user (Public - creates ADMIN with no agency)
   async register(data: RegisterRequest): Promise<AuthResponse> {
      try {
-       // ... Validation ...
        if (!data.email || !data.password || !data.name) {
           return { success: false, message: 'Data tidak lengkap' }
+       }
+
+       if (!validateEmail(data.email)) {
+         return { success: false, message: 'Format email tidak valid' }
+       }
+
+       if (!validatePassword(data.password)) {
+         return {
+           success: false,
+           message: 'Password minimal 8 karakter, harus mengandung huruf dan angka',
+         }
        }
        
        const existingUser = await this.userRepository.findByEmail(data.email)
@@ -253,9 +270,12 @@ export class UserService {
         }
       }
 
+      // Exclude password from response
+      const { password, ...safeUser } = user
+
       return {
         success: true,
-        data: user,
+        data: safeUser,
       }
     } catch (error) {
       return {
