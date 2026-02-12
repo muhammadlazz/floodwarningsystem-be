@@ -1,26 +1,17 @@
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-import { Role } from '@prisma/client' // Import Role Enum
 import { UserRepository } from '../repositories/UserRepository'
-import { LoginRequest, CreateUserRequest, AuthResponse, UserPayload, Role, Agency, RegisterRequest } from '../types'
+import { LoginRequest, CreateUserRequest, AuthResponse, UserPayload, Role, RegisterRequest } from '../types'
 import { validateEmail, validatePassword } from '../utils/validators'
 
 export class UserService {
   private userRepository = new UserRepository()
-  private jwtSecret: string
+  private jwtSecret = process.env.JWT_SECRET || 'default-secret'
   private jwtExpire = process.env.JWT_EXPIRE || '7d'
-
-  constructor() {
-    if (!process.env.JWT_SECRET) {
-      throw new Error('JWT_SECRET environment variable is required')
-    }
-    this.jwtSecret = process.env.JWT_SECRET
-  }
 
   // Create User (Restricted Access)
   async createUser(data: CreateUserRequest, requestor: UserPayload): Promise<AuthResponse> {
     try {
-      // Validasi input
       if (!data.email || !data.password || !data.name || !data.role) {
         return {
           success: false,
@@ -28,7 +19,6 @@ export class UserService {
         }
       }
 
-      // Validasi email format
       if (!validateEmail(data.email)) {
         return { success: false, message: 'Format email tidak valid' }
       }
@@ -39,38 +29,54 @@ export class UserService {
         }
       }
 
-      // Validasi Role (Optional check to ensure valid Enum)
-      if (!Object.values(Role).includes(data.role as Role)) {
-         return {
-           success: false,
-           message: 'Role tidak valid (Gunakan: ADMIN, MASTER_ADMIN, etc)',
-         }
+      if (requestor.role === Role.SUPER_ADMIN) {
+        if (data.role === Role.SUPER_ADMIN) {
+          return { success: false, message: 'Tidak dapat membuat akun Super Admin' }
+        }
+
+        if (data.role === Role.MASTER_ADMIN) {
+          if (!data.agency) {
+            return { success: false, message: 'Agency wajib diisi untuk Master Admin' }
+          }
+
+          const existingMaster = await this.userRepository.findByRoleAndAgency(
+            Role.MASTER_ADMIN,
+            data.agency
+          )
+          if (existingMaster) {
+            return { success: false, message: `Master Admin untuk ${data.agency} sudah ada` }
+          }
+        }
+      } else if (requestor.role === Role.MASTER_ADMIN) {
+        if (data.role !== Role.ADMIN) {
+          return { success: false, message: 'Master Admin hanya bisa membuat Admin biasa' }
+        }
+
+        if (data.agency && data.agency !== requestor.agency) {
+          return { success: false, message: 'Anda tidak dapat membuat user untuk agency lain' }
+        }
+
+        if (!requestor.agency) {
+          return { success: false, message: 'Agency Master Admin tidak valid' }
+        }
+
+        data.agency = requestor.agency
+      } else {
+        return { success: false, message: 'Anda tidak memiliki akses untuk membuat user' }
       }
 
-      // 4. Cek Email Duplikat
       const existingUser = await this.userRepository.findByEmail(data.email)
       if (existingUser) {
         return { success: false, message: 'Email sudah terdaftar' }
       }
 
-      // Create user 
-      // NOTE: We do NOT hash here anymore, the Repository handles it.
+      const hashedPassword = await bcrypt.hash(data.password, 10)
       const user = await this.userRepository.create(
         data.email,
-        data.password, // Send raw password
+        hashedPassword,
         data.name,
-        data.role as Role // Pass the role
-      )
-
-      // Generate token
-      const token = jwt.sign(
-        {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-        },
-        this.jwtSecret,
-        { expiresIn: this.jwtExpire } as jwt.SignOptions
+        data.role,
+        data.agency
       )
 
       return {

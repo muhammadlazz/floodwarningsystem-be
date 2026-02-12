@@ -12,11 +12,11 @@ app.use(express.json());
 
 // Routes
 // Consider adding a version prefix like '/api'
-app.use('/users', userRoutes); 
-app.use('/feedback', feedbackRoutes);
+app.use('/api', userRoutes)
+app.use('/api/feedback', feedbackRoutes)
 
 // Health check
-app.get('/health', async (req, res) => {
+app.get('/api/health', async (req, res) => {
   try {
     // Optional: Check DB connectivity during health check
     await prisma.$queryRaw`SELECT 1`;

@@ -2,16 +2,6 @@ import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import { UserPayload } from '../types'
 
-// --- FIX: Define the type extension right here ---
-declare global {
-  namespace Express {
-    interface Request {
-      user?: UserPayload
-    }
-  }
-}
-// ------------------------------------------------
-
 export const authMiddleware = (
   req: Request,
   res: Response,

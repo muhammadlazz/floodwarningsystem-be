@@ -6,8 +6,24 @@ import * as dotenv from 'dotenv'
 
 dotenv.config()
 
-const connectionString = process.env.DATABASE_URL
-const pool = new Pool({ connectionString })
+const rawConnectionString = process.env.DATABASE_URL!
+const url = new URL(rawConnectionString)
+const sslmode = url.searchParams.get('sslmode')
+
+if (
+  (sslmode === 'prefer' || sslmode === 'require' || sslmode === 'verify-ca') &&
+  !url.searchParams.has('uselibpqcompat')
+) {
+  url.searchParams.set('uselibpqcompat', 'true')
+}
+
+const connectionString = url.toString()
+const sslRequired = sslmode === 'require'
+
+const pool = new Pool({
+  connectionString,
+  ...(sslRequired ? { ssl: { rejectUnauthorized: false } } : {}),
+})
 const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
 

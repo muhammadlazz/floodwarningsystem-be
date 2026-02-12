@@ -14,12 +14,9 @@ model User {
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  // Fix: This correctly references the Agency enum below
-  agency    Agency?  
-  role      Role     @default(ADMIN)
 
-  @@map("users")
+  agency    Agency?
+  role      Role     @default(ADMIN)
 }
 
 model FloodAlert {
@@ -31,8 +28,6 @@ model FloodAlert {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  @@map("flood_alerts")
 }
 
 model Feedback {
@@ -42,8 +37,6 @@ model Feedback {
   description String
   whatsapp    String
   createdAt   DateTime @default(now())
-
-  @@map("feedbacks")
 }
 
 enum Agency {
