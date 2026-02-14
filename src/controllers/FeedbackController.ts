@@ -33,14 +33,17 @@ export class FeedbackController {
     }
   };
 
-  // GET /feedback
+  // GET /feedback (with pagination)
   getAll = async (req: Request, res: Response) => {
     try {
-      const feedbacks = await this.feedbackService.getAllFeedbacks();
+      const page = req.query.page ? Number(req.query.page) : 1;
+      const limit = req.query.limit ? Number(req.query.limit) : 20;
+
+      const data = await this.feedbackService.getAllFeedbacks({ page, limit });
       
       res.status(200).json({
         success: true,
-        data: feedbacks
+        data
       });
     } catch (error) {
       res.status(500).json({

@@ -10,7 +10,7 @@ const userController = new UserController()
 // Limit to 5 login/register attempts per 15 minutes per IP
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5, 
+  max: 100, // Increase for testing
   message: {
     success: false,
     message: "Too many login/register attempts. Please try again later."

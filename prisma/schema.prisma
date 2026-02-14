@@ -39,6 +39,53 @@ model Feedback {
   createdAt   DateTime @default(now())
 }
 
+model Infographic {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  imageUrl    String
+  linkUrl     String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  startAt     DateTime?
+  endAt       DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model BbwsStation {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  name      String
+  riverName String?
+  latitude  Float?
+  longitude Float?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  readings BbwsWaterLevel[]
+
+  @@index([isActive])
+}
+
+model BbwsWaterLevel {
+  id         Int         @id @default(autoincrement())
+  stationId  Int
+  waterLevel Float
+  measuredAt DateTime
+  source     String      @default("BBWS")
+  createdAt  DateTime    @default(now())
+
+  station BbwsStation @relation(fields: [stationId], references: [id], onDelete: Cascade)
+
+  @@unique([stationId, measuredAt])
+  @@index([stationId, measuredAt])
+  @@index([measuredAt])
+}
+
 enum Agency {
   BBWS
   BMKG
