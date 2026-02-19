@@ -1,6 +1,5 @@
 import { prisma } from '../config/database';
-import { Role } from '@prisma/client'; 
-import bcrypt from 'bcrypt';
+import { Agency, Role } from '@prisma/client'; 
 
 export class UserRepository {
   
@@ -8,6 +7,19 @@ export class UserRepository {
   async findByEmail(email: string) {
     return await prisma.user.findUnique({
       where: { email },
+    });
+  }
+
+  async findByRoleAndAgency(role: Role, agency: Agency) {
+    return await prisma.user.findFirst({
+      where: { role, agency },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        agency: true,
+      },
     });
   }
 
@@ -26,29 +38,28 @@ export class UserRepository {
         email: true,
         name: true,
         role: true,
+        agency: true,
         createdAt: true,
       },
     });
   }
 
   // Create user (Updated to accept 'role' as an argument)
-  async create(email: string, password: string, name: string, role: Role) {
-    // 1. Hash the password
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
+  async create(email: string, hashedPassword: string, name: string, role: Role, agency?: Agency) {
     return await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
         name,
         role: role, // <--- Now uses the dynamic input
+        agency,
       },
       select: {
         id: true,
         email: true,
         name: true,
         role: true,
+        agency: true,
       },
     });
   }
@@ -63,6 +74,7 @@ export class UserRepository {
         email: true,
         name: true,
         role: true,
+        agency: true,
       },
     });
   }

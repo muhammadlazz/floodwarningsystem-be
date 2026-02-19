@@ -14,12 +14,9 @@ model User {
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
-  // Fix: This correctly references the Agency enum below
-  agency    Agency?  
-  role      Role     @default(ADMIN)
 
-  @@map("users")
+  agency    Agency?
+  role      Role     @default(ADMIN)
 }
 
 model FloodAlert {
@@ -31,8 +28,6 @@ model FloodAlert {
   description String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  @@map("flood_alerts")
 }
 
 model Feedback {
@@ -42,8 +37,53 @@ model Feedback {
   description String
   whatsapp    String
   createdAt   DateTime @default(now())
+}
 
-  @@map("feedbacks")
+model Infographic {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  imageUrl    String
+  linkUrl     String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  startAt     DateTime?
+  endAt       DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model BbwsStation {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  name      String
+  riverName String?
+  latitude  Float?
+  longitude Float?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  readings BbwsWaterLevel[]
+
+  @@index([isActive])
+}
+
+model BbwsWaterLevel {
+  id         Int         @id @default(autoincrement())
+  stationId  Int
+  waterLevel Float
+  measuredAt DateTime
+  source     String      @default("BBWS")
+  createdAt  DateTime    @default(now())
+
+  station BbwsStation @relation(fields: [stationId], references: [id], onDelete: Cascade)
+
+  @@unique([stationId, measuredAt])
+  @@index([stationId, measuredAt])
+  @@index([measuredAt])
 }
 
 enum Agency {
