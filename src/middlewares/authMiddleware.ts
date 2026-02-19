@@ -2,16 +2,6 @@ import { Request, Response, NextFunction } from 'express'
 import jwt from 'jsonwebtoken'
 import { UserPayload } from '../types'
 
-// --- FIX: Define the type extension right here ---
-declare global {
-  namespace Express {
-    interface Request {
-      user?: UserPayload
-    }
-  }
-}
-// ------------------------------------------------
-
 export const authMiddleware = (
   req: Request,
   res: Response,
@@ -32,7 +22,13 @@ export const authMiddleware = (
     const token = authHeader.split(' ')[1]
 
     // 3. Verify
-    const jwtSecret = process.env.JWT_SECRET || 'default-secret'
+    const jwtSecret = process.env.JWT_SECRET
+    if (!jwtSecret) {
+      return res.status(500).json({
+        success: false,
+        message: 'Server configuration error',
+      })
+    }
     const decoded = jwt.verify(token, jwtSecret) as UserPayload
 
     // 4. Attach to request

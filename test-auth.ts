@@ -1,28 +1,130 @@
 import 'dotenv/config'
 import { UserService } from './src/services/UserService'
+import { Role, Agency } from './src/types'
+import { prisma } from './src/config/database'
 
 async function testAuth() {
   const userService = new UserService()
 
-  console.log('🧪 Testing User Registration...')
-  const registerResult = await userService.register({
-    email: 'test@example.com',
+  console.log('Starting Hierarchy Test...\n')
+
+  // Clean up previous test runs
+  console.log('Cleaning up previous test data...')
+  try {
+      // Delete Master Admin for BBWS if exists
+      const existingMaster = await prisma.user.findFirst({
+          where: { role: Role.MASTER_ADMIN, agency: Agency.BBWS }
+      })
+      if (existingMaster) {
+          // Delete all admins created by this master (optional, but good for cleanup)
+          await prisma.user.deleteMany({
+              where: { agency: Agency.BBWS, role: Role.ADMIN }
+          })
+          await prisma.user.delete({ where: { id: existingMaster.id } })
+          console.log('   - Deleted existing Master Admin BBWS')
+      }
+  } catch (e) {
+      console.log('   - Cleanup warning:', e)
+  }
+  console.log('Cleanup Complete\n')
+
+  // 1. Login as Super Admin (Seeded)
+  console.log('[1] Logging in as Super Admin...')
+  const superLogin = await userService.login({
+    email: 'superadmin@system.com',
     password: 'password123',
-    name: 'Test User',
   })
 
-  console.log('Register Result:', JSON.stringify(registerResult, null, 2))
-
-  if (registerResult.success) {
-    console.log('\n🧪 Testing User Login...')
-    const loginResult = await userService.login({
-      email: 'test@example.com',
-      password: 'password123',
-    })
-
-    console.log('Login Result:', JSON.stringify(loginResult, null, 2))
+  if (!superLogin.success || !superLogin.token) {
+    console.error('FAIL: Super Admin Login Failed:', superLogin.message)
+    process.exit(1)
+  }
+  console.log('OK: Super Admin Logged In\n')
+  const superToken = superLogin.token
+  // Mock Requestor for internal service calls (simulating middleware)
+  const superUserPayload = { 
+    id: superLogin.data!.id, 
+    email: superLogin.data!.email, 
+    role: superLogin.data!.role, 
+    agency: superLogin.data!.agency 
   }
 
+  // 2. Create Master Admin BBWS (by Super Admin)
+  console.log('[2] Creating Master Admin BBWS...')
+  const masterEmail = `master.bbws.${Date.now()}@test.com`
+  const createMaster = await userService.createUser({
+    email: masterEmail,
+    password: 'password123',
+    name: 'Master BBWS',
+    role: Role.MASTER_ADMIN,
+    agency: Agency.BBWS
+  }, superUserPayload)
+
+  if (!createMaster.success) {
+    console.error('FAIL: Create Master Admin Failed:', createMaster.message)
+    // If failed (maybe due to race condition or other issue), we can't proceed
+    process.exit(1)
+  } else {
+    console.log('OK: Master Admin BBWS Created')
+  }
+  console.log('')
+
+  // 3. Login as Master Admin
+  if (createMaster.success) {
+    console.log('[3] Logging in as Master Admin...')
+    const masterLogin = await userService.login({
+      email: masterEmail,
+      password: 'password123'
+    })
+
+    if (masterLogin.success && masterLogin.token) {
+       console.log('OK: Master Admin Logged In\n')
+       
+       const masterUserPayload = {
+          id: masterLogin.data!.id,
+          email: masterLogin.data!.email,
+          role: masterLogin.data!.role,
+          agency: masterLogin.data!.agency
+       }
+
+       // 4. Create Admin BBWS (by Master Admin)
+       console.log('[4] Creating Admin BBWS (by Master Admin)...')
+       const adminEmail = `admin.bbws.${Date.now()}@test.com`
+       const createAdmin = await userService.createUser({
+         email: adminEmail,
+         password: 'password123',
+         name: 'Admin BBWS',
+         role: Role.ADMIN,
+         // Agency should be auto-assigned or validated
+         agency: Agency.BBWS 
+       }, masterUserPayload)
+
+       if (createAdmin.success) {
+         console.log('OK: Admin BBWS Created')
+       } else {
+         console.error('FAIL: Create Admin BBWS Failed:', createAdmin.message)
+       }
+
+       // 5. Try to Create Admin BMKG (Should Fail)
+       console.log('\n[5] Trying to Create Admin BMKG (Should Fail)...')
+       const failAdmin = await userService.createUser({
+          email: `fail.${Date.now()}@test.com`,
+          password: 'password123',
+          name: 'Wrong Agency Admin',
+          role: Role.ADMIN,
+          agency: Agency.BMKG // Wrong agency
+       }, masterUserPayload)
+
+       if (!failAdmin.success) {
+         console.log('OK: Creation blocked as expected:', failAdmin.message)
+       } else {
+         console.error('FAIL: Security Breach: Master Admin created user for different agency!')
+       }
+
+    }
+  }
+
+  console.log('\nTest Complete')
   process.exit(0)
 }
 
