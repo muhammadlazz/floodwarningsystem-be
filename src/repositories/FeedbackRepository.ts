@@ -1,26 +1,22 @@
-import { prisma } from '../config/database';
+import { prisma } from '../config/database'
 
 export class FeedbackRepository {
-  // Create new feedback
-  async create(data: { name: string; email: string; description: string; whatsapp: string }) {
-    return await prisma.feedback.create({
-      data,
-    });
+  async create(data: { name: string; email: string; whatsapp: string; description: string }) {
+    return await prisma.feedback.create({ data })
   }
 
-  // Get all feedbacks (Latest first) with optional pagination
-  async findAll(params?: { skip?: number; take?: number }) {
-    return await prisma.feedback.findMany({
-      orderBy: {
-        createdAt: 'desc',
-      },
-      skip: params?.skip,
-      take: params?.take,
-    });
+  async findAll() {
+    return await prisma.feedback.findMany({ orderBy: { createdAt: 'desc' } })
   }
 
-  // Count total feedbacks
-  async count() {
-    return await prisma.feedback.count();
+  async findById(id: number) {
+    return await prisma.feedback.findUnique({ where: { id } })
+  }
+
+  async markAsRead(id: number) {
+    return await prisma.feedback.update({
+      where: { id },
+      data: { isRead: true },
+    })
   }
 }
