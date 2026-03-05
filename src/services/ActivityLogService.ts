@@ -1,10 +1,10 @@
 import { ActivityLogRepository } from '../repositories/ActivityLogRepository'
 import { LogAction } from '@prisma/client'
+import { UserPayload, Role } from '../types'
 
 export class ActivityLogService {
   private repository = new ActivityLogRepository()
 
-  // Fungsi internal yang akan dipanggil oleh Service lain (misal UserService)
   async logAction(userId: number | undefined, action: LogAction, entity: string, description: string) {
     try {
       await this.repository.create({ userId, action, entity, description })
@@ -13,9 +13,11 @@ export class ActivityLogService {
     }
   }
 
-  async getLogs() {
+  async getLogs(requestor: UserPayload) {
     try {
-      const logs = await this.repository.findAll()
+      // MASTER_ADMIN hanya melihat log dari instansinya sendiri
+      const agencyFilter = requestor.role === Role.MASTER_ADMIN ? requestor.agency! : undefined
+      const logs = await this.repository.findAll(agencyFilter)
       return { success: true, data: logs }
     } catch (error) {
       return { success: false, message: (error as Error).message }

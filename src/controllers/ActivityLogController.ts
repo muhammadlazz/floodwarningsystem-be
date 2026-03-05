@@ -7,12 +7,13 @@ export class ActivityLogController {
 
   getLogs = async (req: Request, res: Response) => {
     const requestor = req.user!
-    // Asumsi hanya admin level atas yang boleh lihat log
+    
     if (requestor.role !== Role.SUPER_ADMIN && requestor.role !== Role.MASTER_ADMIN) {
       return res.status(403).json({ success: false, message: 'Akses ditolak' })
     }
 
-    const result = await this.service.getLogs()
+    // Pass requestor ke service untuk filter data
+    const result = await this.service.getLogs(requestor)
     return res.status(result.success ? 200 : 500).json(result)
   }
 }
