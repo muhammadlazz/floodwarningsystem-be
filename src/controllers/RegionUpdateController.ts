@@ -5,7 +5,7 @@ export class RegionUpdateController {
   private service = new RegionUpdateService()
 
   create = async (req: Request, res: Response) => {
-    const result = await this.service.createRegionUpdate(req.body)
+    const result = await this.service.createRegionUpdate(req.body, req.user!)
     return res.status(result.success ? 201 : 400).json(result)
   }
 
@@ -18,7 +18,7 @@ export class RegionUpdateController {
     const parsedId = parseInt(req.params.id)
     if (isNaN(parsedId)) return res.status(400).json({ success: false, message: 'Invalid ID' })
 
-    const result = await this.service.updateRegionUpdate(parsedId, req.body)
+    const result = await this.service.updateRegionUpdate(parsedId, req.body, req.user!)
     return res.status(result.success ? 200 : 400).json(result)
   }
 
@@ -26,7 +26,7 @@ export class RegionUpdateController {
     const parsedId = parseInt(req.params.id)
     if (isNaN(parsedId)) return res.status(400).json({ success: false, message: 'Invalid ID' })
 
-    const result = await this.service.deleteRegionUpdate(parsedId)
+    const result = await this.service.deleteRegionUpdate(parsedId, req.user!)
     return res.status(result.success ? 200 : 400).json(result)
   }
 }

@@ -1,11 +1,14 @@
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { UserRepository } from '../repositories/UserRepository'
+import { ActivityLogService } from './ActivityLogService'
 import { LoginRequest, CreateUserRequest, UpdateUserRequest, AuthResponse, UserPayload, Role, RegisterRequest } from '../types'
 import { validateEmail, validatePassword } from '../utils/validators'
+import { LogAction } from '@prisma/client'
 
 export class UserService {
   private userRepository = new UserRepository()
+  private logService = new ActivityLogService()
   private jwtSecret = process.env.JWT_SECRET!
   private jwtExpire = process.env.JWT_EXPIRE || '7d'
 
@@ -40,6 +43,9 @@ export class UserService {
         role: data.role,
         agency: data.agency,
       })
+
+      // Trigger log
+      this.logService.logAction(requestor.id, LogAction.CREATE, 'User', `Membuat akun baru: ${user.username}`)
 
       return { success: true, message: 'User berhasil dibuat', data: user }
     } catch (error) {
@@ -84,6 +90,10 @@ export class UserService {
       }
 
       const updatedUser = await this.userRepository.update(targetId, updateData)
+
+      // Trigger log
+      this.logService.logAction(requestor.id, LogAction.UPDATE, 'User', `Memperbarui profil user ID: ${targetId}`)
+
       return { success: true, message: 'Profile berhasil diupdate', data: updatedUser }
     } catch (error) {
       return { success: false, message: (error as Error).message }
@@ -101,6 +111,10 @@ export class UserService {
       if (!canDelete) return { success: false, message: 'Akses ditolak' }
 
       await this.userRepository.delete(targetId)
+
+      // Trigger log
+      this.logService.logAction(requestor.id, LogAction.DELETE, 'User', `Menghapus user ID: ${targetId} (${targetUser.username})`)
+
       return { success: true, message: 'User berhasil dihapus' }
     } catch (error) {
       return { success: false, message: (error as Error).message }
@@ -126,6 +140,9 @@ export class UserService {
         this.jwtSecret,
         { expiresIn: this.jwtExpire } as jwt.SignOptions
       )
+
+      // Trigger log
+      this.logService.logAction(user.id, LogAction.LOGIN, 'Auth', 'User berhasil login')
 
       return {
         success: true,
@@ -161,6 +178,9 @@ export class UserService {
        this.jwtSecret,
        { expiresIn: this.jwtExpire } as jwt.SignOptions
       )
+
+      // Trigger log (self registration)
+      this.logService.logAction(user.id, LogAction.CREATE, 'Auth', 'Registrasi akun baru')
 
       return { success: true, message: 'Register berhasil', data: user, token }
     } catch (error) {

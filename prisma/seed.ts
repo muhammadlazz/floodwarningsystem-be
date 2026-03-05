@@ -6,10 +6,10 @@ const prisma = new PrismaClient()
 
 async function main() {
   const email = 'superadmin@system.com'
+  const username = 'superadmin' // Tambahan field username
   const password = 'password123'
   const name = 'Super Admin'
 
-  // Pastikan string ini sesuai dengan Enum di prisma/schema.prisma
   const role = 'SUPER_ADMIN'
   const agency = 'SYSTEM'
 
@@ -27,6 +27,7 @@ async function main() {
   await prisma.user.create({
     data: {
       email,
+      username, // Insert field username
       password: hashedPassword,
       name,
       role: role as any,

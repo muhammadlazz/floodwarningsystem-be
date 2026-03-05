@@ -29,7 +29,7 @@ app.use(express.json({ limit: '10kb' }));
 app.use('/api', userRoutes);
 app.use('/api', infographicRoutes);
 app.use('/api', bbwsRoutes);
-app.use('/api/feedback', feedbackRoutes);
+app.use('/api', feedbackRoutes);
 app.use('/api', activityLogRoutes);
 app.use('/api', reportRoutes);
 app.use('/api', regionUpdateRoutes);
