@@ -8,18 +8,110 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+
+// enums
+enum Agency {
+  CITRA_BANJIR
+  BBWS
+  BMKG
+  BPBD_JABAR
+  BPBD_KAB
+  SYSTEM
+}
+
+enum Role {
+  SUPER_ADMIN
+  MASTER_ADMIN
+  ADMIN
+}
+
+enum LogAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+}
+
+enum ReportStatus {
+  BARU
+  DIPROSES
+  SELESAI 
+}
+
+enum AlertStatus {
+  RAWAN_BANJIR
+  AMAN
+}
+
+
+// models
 model User {
   id        Int      @id @default(autoincrement())
+  name      String
+  username  String   @unique
   email     String   @unique
   password  String
-  name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   agency    Agency?
   role      Role     @default(ADMIN)
+
+  // Relations
+  activityLogs ActivityLog[]
 }
 
+model Feedback {
+  id          Int      @id @default(autoincrement())
+  name        String
+  email       String
+  description String   @db.Text
+  whatsapp    String
+  isRead      Boolean  @default(false) // false = baru, true = terbaca
+  createdAt   DateTime @default(now())
+}
+
+model ActivityLog {
+  id          Int       @id @default(autoincrement())
+  userId      Int?
+  action      LogAction
+  entity      String?   // Tabel/Modul yang terdampak (misal: "User", "Report")
+  description String    @db.Text
+  createdAt   DateTime  @default(now())
+
+  // Relasi ke User
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model Report {
+  id           Int          @id @default(autoincrement())
+  reporterName String
+  location     String
+  impact       String       @db.Text
+  status       ReportStatus @default(BARU)
+  createdAt    DateTime     @default(now()) // Menjadi parameter "Waktu Laporan"
+  updatedAt    DateTime     @updatedAt
+}
+
+model RegionUpdate {
+  id                      Int         @id @default(autoincrement())
+  regionName              String
+  alertStatus             AlertStatus @default(AMAN)
+  latitude                Float?
+  longitude               Float?
+  familyCount             Int         @default(0) // jumlah kepala keluarga
+  deathCount              Int         @default(0) // total korban jiwa
+  evacueeCount            Int         @default(0) // jumlah warga ngungsi
+  injuredCount            Int         @default(0) // luka-luka
+  submergedHouses         Int         @default(0) // rumah terendam
+  heavilyDamagedHouses    Int         @default(0) // rumah rusak parah
+  damagedPublicFacilities Int         @default(0) // fasilitas umum rusak
+  damagedWorshipPlaces    Int         @default(0) // tempat ibadah rusak
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
+}
+
+// existing models
 model FloodAlert {
   id          Int      @id @default(autoincrement())
   location    String
@@ -31,27 +123,18 @@ model FloodAlert {
   updatedAt   DateTime @updatedAt
 }
 
-model Feedback {
-  id          Int      @id @default(autoincrement())
-  name        String
-  email       String
-  description String
-  whatsapp    String
-  createdAt   DateTime @default(now())
-}
-
 model Infographic {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   title       String
   description String?
   imageUrl    String
   linkUrl     String?
-  isActive    Boolean  @default(true)
-  sortOrder   Int      @default(0)
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
   startAt     DateTime?
   endAt       DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([isActive, sortOrder])
 }
@@ -85,17 +168,4 @@ model BbwsWaterLevel {
   @@unique([stationId, measuredAt])
   @@index([stationId, measuredAt])
   @@index([measuredAt])
-}
-
-enum Agency {
-  BBWS
-  BMKG
-  BPBD
-  SYSTEM
-}
-
-enum Role {
-  SUPER_ADMIN
-  MASTER_ADMIN
-  ADMIN
 }

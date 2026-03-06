@@ -1,43 +1,51 @@
 import { Agency, Role } from '@prisma/client'
+import { ReportStatus, AlertStatus } from '@prisma/client'
 
 export { Agency, Role }
 
 export interface UserPayload {
   id: number
   email: string
+  username: string
   role: Role
   agency?: Agency | null
 }
 
 export interface LoginRequest {
-  email: string
+  email?: string
+  username?: string
   password: string
 }
 
 export interface RegisterRequest {
+  name: string
+  username: string
   email: string
   password: string
-  name: string
 }
 
 export interface CreateUserRequest {
+  name: string
+  username: string
   email: string
   password: string
-  name: string
   role: Role
+  agency?: Agency
+}
+
+export interface UpdateUserRequest {
+  name?: string
+  username?: string
+  email?: string
+  password?: string
+  role?: Role
   agency?: Agency
 }
 
 export interface AuthResponse {
   success: boolean
   message: string
-  data?: {
-    id: number
-    email: string
-    name: string
-    role: Role
-    agency?: Agency | null
-  }
+  data?: any
   token?: string
 }
 
@@ -100,3 +108,34 @@ export interface BbwsWaterLevelUpdateRequest {
   measuredAt?: string
   source?: string
 }
+
+export interface ReportCreateRequest {
+  reporterName: string
+  location: string
+  impact: string
+  status?: ReportStatus
+}
+
+export interface ReportUpdateRequest {
+  reporterName?: string
+  location?: string
+  impact?: string
+  status?: ReportStatus
+}
+
+export interface RegionUpdateCreateRequest {
+  regionName: string
+  alertStatus?: AlertStatus
+  latitude?: number
+  longitude?: number
+  familyCount?: number
+  deathCount?: number
+  evacueeCount?: number
+  injuredCount?: number
+  submergedHouses?: number
+  heavilyDamagedHouses?: number
+  damagedPublicFacilities?: number
+  damagedWorshipPlaces?: number
+}
+
+export interface RegionUpdateUpdateRequest extends Partial<RegionUpdateCreateRequest> {}
