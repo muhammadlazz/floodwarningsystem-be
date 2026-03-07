@@ -24,7 +24,10 @@ export const optionalAuthMiddleware = (req: Request, res: Response, next: NextFu
     }
 
     const decoded = jwt.verify(token, jwtSecret) as UserPayload
-    req.user = decoded
+    
+    // FIX: Cast req to any to bypass the TypeScript property check
+    (req as any).user = decoded
+    
     return next()
   } catch {
     return res.status(401).json({
@@ -33,4 +36,3 @@ export const optionalAuthMiddleware = (req: Request, res: Response, next: NextFu
     })
   }
 }
-

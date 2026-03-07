@@ -13,8 +13,8 @@ export class InfographicController {
 
     const includeInactive =
       includeInactiveRequested &&
-      !!req.user &&
-      (req.user.role === Role.SUPER_ADMIN || req.user.role === Role.MASTER_ADMIN)
+      !!(req as any).user &&
+      ((req as any).user.role === Role.SUPER_ADMIN || (req as any).user.role === Role.MASTER_ADMIN)
 
     const result = await this.infographicService.listInfographics({ page, limit, includeInactive })
 
@@ -32,8 +32,8 @@ export class InfographicController {
 
     const includeInactive =
       includeInactiveRequested &&
-      !!req.user &&
-      (req.user.role === Role.SUPER_ADMIN || req.user.role === Role.MASTER_ADMIN)
+      !!(req as any).user &&
+      ((req as any).user.role === Role.SUPER_ADMIN || (req as any).user.role === Role.MASTER_ADMIN)
 
     const result = await this.infographicService.getInfographicById(parsedId, { includeInactive })
 
@@ -42,7 +42,7 @@ export class InfographicController {
   }
 
   create = async (req: Request, res: Response) => {
-    const requestor = req.user
+    const requestor = (req as any).user
     const data: InfographicCreateRequest = req.body
     const result = await this.infographicService.createInfographic(data, requestor!)
 
@@ -51,7 +51,7 @@ export class InfographicController {
   }
 
   update = async (req: Request, res: Response) => {
-    const requestor = req.user
+    const requestor = (req as any).user
     const parsedId = parseInt(req.params.id)
     if (isNaN(parsedId)) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' })
@@ -66,7 +66,7 @@ export class InfographicController {
   }
 
   delete = async (req: Request, res: Response) => {
-    const requestor = req.user
+    const requestor = (req as any).user
     const parsedId = parseInt(req.params.id)
     if (isNaN(parsedId)) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' })
