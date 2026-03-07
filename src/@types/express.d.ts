@@ -1,4 +1,4 @@
-import { Role } from '../types'; // Import your Role enum/type
+import { Role } from '../types'; 
 
 declare global {
   namespace Express {
@@ -6,7 +6,7 @@ declare global {
       user?: {
         id: number;
         role: Role;
-        // add other properties if you use them, like email: string;
+        email: string; // Add this line!
       };
     }
   }
