@@ -5,7 +5,8 @@ export class RegionUpdateController {
   private service = new RegionUpdateService()
 
   create = async (req: Request, res: Response) => {
-    const result = await this.service.createRegionUpdate(req.body, req.user!)
+    // FIX: Cast req to any for Render build compatibility
+    const result = await this.service.createRegionUpdate(req.body, (req as any).user!)
     return res.status(result.success ? 201 : 400).json(result)
   }
 
@@ -18,7 +19,8 @@ export class RegionUpdateController {
     const parsedId = parseInt(req.params.id)
     if (isNaN(parsedId)) return res.status(400).json({ success: false, message: 'Invalid ID' })
 
-    const result = await this.service.updateRegionUpdate(parsedId, req.body, req.user!)
+    // FIX: Cast req to any to access user property
+    const result = await this.service.updateRegionUpdate(parsedId, req.body, (req as any).user!)
     return res.status(result.success ? 200 : 400).json(result)
   }
 
@@ -26,7 +28,8 @@ export class RegionUpdateController {
     const parsedId = parseInt(req.params.id)
     if (isNaN(parsedId)) return res.status(400).json({ success: false, message: 'Invalid ID' })
 
-    const result = await this.service.deleteRegionUpdate(parsedId, req.user!)
+    // FIX: Cast req to any to access user property
+    const result = await this.service.deleteRegionUpdate(parsedId, (req as any).user!)
     return res.status(result.success ? 200 : 400).json(result)
   }
 }
