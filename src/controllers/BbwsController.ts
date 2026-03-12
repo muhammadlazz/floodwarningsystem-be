@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import { BbwsService } from '../services/BbwsService'
+import { ActivityLogService } from '../services/ActivityLogService'
 import { runBbwsSyncOnce } from '../jobs/bbwsSyncJob'
 import {
   BbwsStationCreateRequest,
@@ -11,6 +12,7 @@ import {
 
 export class BbwsController {
   private bbwsService = new BbwsService()
+  private logService = new ActivityLogService()
 
   listStations = async (req: Request, res: Response) => {
     const page = req.query.page ? Number(req.query.page) : 1
@@ -157,4 +159,48 @@ export class BbwsController {
       return res.status(500).json({ success: false, message: (error as Error).message })
     }
   }
+
+  createDebit = async (req: Request, res: Response) => {
+    try {
+      const { stationId, debit } = req.body
+      // 2. UBAH DI SINI JUGA
+      const data = await this.bbwsService.createDebit(stationId, debit)
+      
+      await this.logService.logAction(req.user?.id, 'CREATE', 'BbwsDebit', `Input debit air di ${data.station.name}: ${debit} m³/s`)
+      
+      return res.status(201).json({ success: true, message: 'Data debit berhasil disimpan', data })
+    } catch (error) {
+      return res.status(500).json({ success: false, message: (error as Error).message })
+    }
+  }
+
+  createRainfall = async (req: Request, res: Response) => {
+    try {
+      const { stationId, rainfall } = req.body
+      // 3. UBAH DI SINI JUGA
+      const data = await this.bbwsService.createRainfall(stationId, rainfall)
+      
+      await this.logService.logAction(req.user?.id, 'CREATE', 'BbwsRainfall', `Input curah hujan di ${data.station.name}: ${rainfall} mm`)
+      
+      return res.status(201).json({ success: true, message: 'Data curah hujan berhasil disimpan', data })
+    } catch (error) {
+      return res.status(500).json({ success: false, message: (error as Error).message })
+    }
+  }
+
+  getHistoryLive = async (req: Request, res: Response) => {
+    try {
+      const limit = Number(req.query.limit) || 5
+      // 4. UBAH DI SINI JUGA
+      const data = await this.bbwsService.getHistoryLive(limit)
+      return res.status(200).json({ success: true, data })
+    } catch (error) {
+      return res.status(500).json({ success: false, message: (error as Error).message })
+    }
+  }
+
+  // Placeholder stats
+  getStats = async (req: Request, res: Response) => { res.status(501).json({ success: false, message: 'Belum diimplementasi' }) }
+  getTmaTrend = async (req: Request, res: Response) => { res.status(501).json({ success: false, message: 'Belum diimplementasi' }) }
+  getRainfallTrend = async (req: Request, res: Response) => { res.status(501).json({ success: false, message: 'Belum diimplementasi' }) }
 }

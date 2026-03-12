@@ -1,3 +1,4 @@
+import { prisma } from '../config/database'
 import {
   ApiResponse,
   BbwsStationCreateRequest,
@@ -358,4 +359,31 @@ export class BbwsService {
       return { success: false, message: (error as Error).message }
     }
   }
+  async createDebit(stationId: number, debit: number) {
+    return await prisma.bbwsDebit.create({
+      data: { stationId, debit, measuredAt: new Date() },
+      include: { station: true }
+    })
+  }
+
+  async createRainfall(stationId: number, rainfall: number) {
+    return await prisma.bbwsRainfall.create({
+      data: { stationId, rainfall, measuredAt: new Date() },
+      include: { station: true }
+    })
+  }
+
+  async getHistoryLive(limit: number = 5) {
+    // Mengambil 5 data TMA terbaru untuk ditampilkan di sidebar
+    return await prisma.bbwsWaterLevel.findMany({
+      take: limit,
+      orderBy: { measuredAt: 'desc' },
+      include: { station: { select: { name: true, code: true } } }
+    })
+  }
+
+  // Placeholder Modul Monitoring BBWS
+  async getStats() { return {} }
+  async getTmaTrend() { return [] }
+  async getRainfallTrend() { return [] }
 }

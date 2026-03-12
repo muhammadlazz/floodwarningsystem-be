@@ -10,6 +10,7 @@ import bbwsRoutes from './routes/bbwsRoutes';
 import activityLogRoutes from './routes/activityLogRoutes';
 import reportRoutes from './routes/reportRoutes';
 import regionUpdateRoutes from './routes/regionUpdateRoutes';
+import bmkgRoutes from './routes/bmkgRoutes';
 import { errorHandler } from './middlewares/errorHandler';
 import { startBbwsSyncJob } from './jobs/bbwsSyncJob';
 
@@ -29,6 +30,7 @@ app.use(express.json({ limit: '10kb' }));
 app.use('/api', userRoutes);
 app.use('/api', infographicRoutes);
 app.use('/api', bbwsRoutes);
+app.use('/api', bmkgRoutes);
 app.use('/api', feedbackRoutes);
 app.use('/api', activityLogRoutes);
 app.use('/api', reportRoutes);

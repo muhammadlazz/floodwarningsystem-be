@@ -150,7 +150,9 @@ model BbwsStation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  readings BbwsWaterLevel[]
+  readings  BbwsWaterLevel[]
+  debits    BbwsDebit[]      // Relasi baru untuk debit
+  rainfalls BbwsRainfall[]   // Relasi baru untuk curah hujan
 
   @@index([isActive])
 }
@@ -164,6 +166,81 @@ model BbwsWaterLevel {
   createdAt  DateTime    @default(now())
 
   station BbwsStation @relation(fields: [stationId], references: [id], onDelete: Cascade)
+
+  @@unique([stationId, measuredAt])
+  @@index([stationId, measuredAt])
+  @@index([measuredAt])
+}
+
+model BbwsDebit {
+  id         Int         @id @default(autoincrement())
+  stationId  Int
+  debit      Float       // Satuan m³/s
+  measuredAt DateTime
+  createdAt  DateTime    @default(now())
+
+  station    BbwsStation @relation(fields: [stationId], references: [id], onDelete: Cascade)
+
+  @@unique([stationId, measuredAt])
+  @@index([stationId, measuredAt])
+  @@index([measuredAt])
+}
+
+model BbwsRainfall {
+  id         Int         @id @default(autoincrement())
+  stationId  Int
+  rainfall   Float       // Satuan mm
+  measuredAt DateTime
+  createdAt  DateTime    @default(now())
+
+  station    BbwsStation @relation(fields: [stationId], references: [id], onDelete: Cascade)
+
+  @@unique([stationId, measuredAt])
+  @@index([stationId, measuredAt])
+  @@index([measuredAt])
+}
+
+model BmkgStation {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  name      String
+  latitude  Float?
+  longitude Float?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  weathers  BmkgWeather[]
+  rainfalls BmkgRainfall[]
+
+  @@index([isActive])
+}
+
+model BmkgWeather {
+  id          Int         @id @default(autoincrement())
+  stationId   Int
+  temperature Float       // Suhu dalam °C
+  windSpeed   Float       // Kecepatan angin
+  forecast    String      // Status: Cerah/Berawan/Hujan
+  notes       String?     @db.Text
+  measuredAt  DateTime
+  createdAt   DateTime    @default(now())
+
+  station     BmkgStation @relation(fields: [stationId], references: [id], onDelete: Cascade)
+
+  @@unique([stationId, measuredAt])
+  @@index([stationId, measuredAt])
+  @@index([measuredAt])
+}
+
+model BmkgRainfall {
+  id         Int         @id @default(autoincrement())
+  stationId  Int
+  rainfall   Float       // Satuan mm
+  measuredAt DateTime
+  createdAt  DateTime    @default(now())
+
+  station    BmkgStation @relation(fields: [stationId], references: [id], onDelete: Cascade)
 
   @@unique([stationId, measuredAt])
   @@index([stationId, measuredAt])
