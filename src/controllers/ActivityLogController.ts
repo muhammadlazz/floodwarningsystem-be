@@ -6,9 +6,10 @@ export class ActivityLogController {
   private service = new ActivityLogService()
 
   getLogs = async (req: Request, res: Response) => {
-    const requestor = req.user!
+    const requestor = (req as any).user
     
-    if (requestor.role !== Role.SUPER_ADMIN && requestor.role !== Role.MASTER_ADMIN) {
+    // Safety check in case the middleware didn't attach the user
+    if (!requestor || (requestor.role !== Role.SUPER_ADMIN && requestor.role !== Role.MASTER_ADMIN)) {
       return res.status(403).json({ success: false, message: 'Akses ditolak' })
     }
 

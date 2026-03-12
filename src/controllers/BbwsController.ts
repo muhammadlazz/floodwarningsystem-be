@@ -19,8 +19,8 @@ export class BbwsController {
     const includeInactiveRequested = String(req.query.includeInactive) === 'true'
     const includeInactive =
       includeInactiveRequested &&
-      !!req.user &&
-      (req.user.role === Role.SUPER_ADMIN || req.user.role === Role.MASTER_ADMIN)
+      !!(req as any).user &&
+      ((req as any).user.role === Role.SUPER_ADMIN || (req as any).user.role === Role.MASTER_ADMIN)
 
     const result = await this.bbwsService.listStations({ page, limit, includeInactive })
     if (result.success) return res.status(200).json(result)
@@ -36,8 +36,8 @@ export class BbwsController {
     const includeInactiveRequested = String(req.query.includeInactive) === 'true'
     const includeInactive =
       includeInactiveRequested &&
-      !!req.user &&
-      (req.user.role === Role.SUPER_ADMIN || req.user.role === Role.MASTER_ADMIN)
+      !!(req as any).user &&
+      ((req as any).user.role === Role.SUPER_ADMIN || (req as any).user.role === Role.MASTER_ADMIN)
 
     const result = await this.bbwsService.getStationById(parsedId, { includeInactive })
     if (result.success) return res.status(200).json(result)
@@ -45,7 +45,7 @@ export class BbwsController {
   }
 
   createStation = async (req: Request, res: Response) => {
-    const requestor = req.user
+    const requestor = (req as any).user
     const data: BbwsStationCreateRequest = req.body
     const result = await this.bbwsService.createStation(data, requestor!)
 
@@ -54,7 +54,7 @@ export class BbwsController {
   }
 
   updateStation = async (req: Request, res: Response) => {
-    const requestor = req.user
+    const requestor = (req as any).user
     const parsedId = parseInt(req.params.id)
     if (isNaN(parsedId)) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' })
@@ -69,7 +69,7 @@ export class BbwsController {
   }
 
   deleteStation = async (req: Request, res: Response) => {
-    const requestor = req.user
+    const requestor = (req as any).user
     const parsedId = parseInt(req.params.id)
     if (isNaN(parsedId)) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' })
@@ -105,7 +105,7 @@ export class BbwsController {
   }
 
   createWaterLevel = async (req: Request, res: Response) => {
-    const requestor = req.user
+    const requestor = (req as any).user
     const data: BbwsWaterLevelCreateRequest = req.body
     const result = await this.bbwsService.createWaterLevel(data, requestor!)
 
@@ -115,7 +115,7 @@ export class BbwsController {
   }
 
   updateWaterLevel = async (req: Request, res: Response) => {
-    const requestor = req.user
+    const requestor = (req as any).user
     const parsedId = parseInt(req.params.id)
     if (isNaN(parsedId)) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' })
@@ -131,7 +131,7 @@ export class BbwsController {
   }
 
   deleteWaterLevel = async (req: Request, res: Response) => {
-    const requestor = req.user
+    const requestor = (req as any).user
     const parsedId = parseInt(req.params.id)
     if (isNaN(parsedId)) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' })
@@ -144,7 +144,7 @@ export class BbwsController {
   }
 
   syncNow = async (req: Request, res: Response) => {
-    const user = req.user!
+    const user = (req as any).user!
     if (!(user.role === Role.SUPER_ADMIN || user.role === Role.MASTER_ADMIN)) {
       return res.status(403).json({ success: false, message: 'Anda tidak memiliki akses untuk menjalankan sync' })
     }
