@@ -6,7 +6,7 @@ export class ReportController {
 
   create = async (req: Request, res: Response) => {
     // FIX: Cast req to any to allow access to user property for Render build
-    const result = await this.service.createReport(req.body, (req as any).user!)
+    const result = await this.service.createReport(req.body, (req as any).user)
     return res.status(result.success ? 201 : 400).json(result)
   }
 
