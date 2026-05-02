@@ -7,14 +7,14 @@ export class ReportService {
   private repository = new ReportRepository()
   private logService = new ActivityLogService()
 
-  async createReport(data: ReportCreateRequest, requestor: UserPayload) {
+  async createReport(data: ReportCreateRequest, requestor?: UserPayload) {
     try {
       if (!data.reporterName || !data.location || !data.impact) {
         return { success: false, message: 'Nama pelapor, lokasi, dan dampak wajib diisi' }
       }
       const report = await this.repository.create(data)
 
-      this.logService.logAction(requestor.id, LogAction.CREATE, 'Report', `Menambahkan laporan dari ${data.reporterName} di ${data.location}`)
+      this.logService.logAction(requestor?.id, LogAction.CREATE, 'Report', `Menambahkan laporan dari ${data.reporterName} di ${data.location}`)
 
       return { success: true, message: 'Laporan berhasil dibuat', data: report }
     } catch (error) {
