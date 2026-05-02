@@ -11,6 +11,7 @@ import activityLogRoutes from './routes/activityLogRoutes';
 import reportRoutes from './routes/reportRoutes';
 import regionUpdateRoutes from './routes/regionUpdateRoutes';
 import bmkgRoutes from './routes/bmkgRoutes';
+import bpbdRoutes from './routes/bpbdRoutes';
 import { errorHandler } from './middlewares/errorHandler';
 import { startBbwsSyncJob } from './jobs/bbwsSyncJob';
 
@@ -31,6 +32,7 @@ app.use('/api', userRoutes);
 app.use('/api', infographicRoutes);
 app.use('/api', bbwsRoutes);
 app.use('/api', bmkgRoutes);
+app.use('/api', bpbdRoutes);
 app.use('/api', feedbackRoutes);
 app.use('/api', activityLogRoutes);
 app.use('/api', reportRoutes);
