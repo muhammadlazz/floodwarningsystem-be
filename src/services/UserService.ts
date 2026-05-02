@@ -53,6 +53,70 @@ export class UserService {
     }
   }
 
+  // Edit profil diri sendiri (Hanya update data aman: name, username, email)
+  async updateProfile(userId: number, data: { name?: string, username?: string, email?: string }): Promise<AuthResponse> {
+    try {
+      const targetUser = await this.userRepository.findById(userId)
+      if (!targetUser) return { success: false, message: 'User tidak ditemukan' }
+
+      const updateData: any = {}
+
+      if (data.name) updateData.name = data.name
+
+      if (data.username && data.username !== targetUser.username) {
+        if (await this.userRepository.findByUsername(data.username)) return { success: false, message: 'Username sudah dipakai' }
+        updateData.username = data.username
+      }
+
+      if (data.email && data.email !== targetUser.email) {
+        if (!validateEmail(data.email)) return { success: false, message: 'Format email tidak valid' }
+        if (await this.userRepository.findByEmail(data.email)) return { success: false, message: 'Email sudah dipakai' }
+        updateData.email = data.email
+      }
+
+      const updatedUser = await this.userRepository.update(userId, updateData)
+
+      // Trigger log
+      this.logService.logAction(userId, LogAction.UPDATE, 'User', 'Memperbarui profil diri sendiri')
+
+      return { success: true, message: 'Profile berhasil diupdate', data: updatedUser }
+    } catch (error) {
+      return { success: false, message: (error as Error).message }
+    }
+  }
+
+  // Edit password diri sendiri (Butuh validasi password lama)
+  async updatePassword(userId: number, data: { oldPassword?: string, newPassword?: string }): Promise<AuthResponse> {
+    try {
+      if (!data.oldPassword || !data.newPassword) {
+        return { success: false, message: 'Password lama dan baru wajib diisi' }
+      }
+
+      const targetUser = await this.userRepository.findById(userId)
+      if (!targetUser) return { success: false, message: 'User tidak ditemukan' }
+
+      // Cek apakah password lama sesuai
+      const isMatch = await bcrypt.compare(data.oldPassword, targetUser.password)
+      if (!isMatch) return { success: false, message: 'Password lama salah' }
+
+      // Validasi password baru
+      if (!validatePassword(data.newPassword)) {
+        return { success: false, message: 'Password baru tidak memenuhi syarat keamanan' }
+      }
+
+      const hashedPassword = await bcrypt.hash(data.newPassword, 10)
+      await this.userRepository.update(userId, { password: hashedPassword })
+
+      // Trigger log
+      this.logService.logAction(userId, LogAction.UPDATE, 'User', 'Memperbarui password keamanan')
+
+      return { success: true, message: 'Password berhasil diupdate' }
+    } catch (error) {
+      return { success: false, message: (error as Error).message }
+    }
+  }
+
+  // Edit user lain (Digunakan oleh Admin/SuperAdmin)
   async updateUser(targetId: number, data: UpdateUserRequest, requestor: UserPayload): Promise<AuthResponse> {
     try {
       const targetUser = await this.userRepository.findById(targetId)
@@ -94,7 +158,7 @@ export class UserService {
       // Trigger log
       this.logService.logAction(requestor.id, LogAction.UPDATE, 'User', `Memperbarui profil user ID: ${targetId}`)
 
-      return { success: true, message: 'Profile berhasil diupdate', data: updatedUser }
+      return { success: true, message: 'Profile user berhasil diupdate', data: updatedUser }
     } catch (error) {
       return { success: false, message: (error as Error).message }
     }
