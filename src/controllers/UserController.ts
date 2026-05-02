@@ -50,7 +50,6 @@ export class UserController {
     return res.status(result.success ? 201 : 403).json(result)
   }
 
-  // Edit user lain (digunakan oleh Admin)
   updateUser = async (req: Request, res: Response) => {
     // New feature from your friend - added any cast
     const parsedId = parseInt(req.params.id)
@@ -60,7 +59,6 @@ export class UserController {
     return res.status(result.success ? 200 : 400).json(result)
   }
 
-  // Edit profile diri sendiri (id diambil dari token)
   updateProfile = async (req: Request, res: Response) => {
     const requestor = (req as any).user
     if (!requestor) return res.status(401).json({ success: false, message: 'Unauthorized' })
@@ -69,7 +67,6 @@ export class UserController {
     return res.status(result.success ? 200 : 400).json(result)
   }
 
-  // Edit password diri sendiri (id diambil dari token)
   updatePassword = async (req: Request, res: Response) => {
     const requestor = (req as any).user
     if (!requestor) return res.status(401).json({ success: false, message: 'Unauthorized' })

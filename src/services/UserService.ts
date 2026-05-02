@@ -53,7 +53,6 @@ export class UserService {
     }
   }
 
-  // Edit profil diri sendiri (Hanya update data aman: name, username, email)
   async updateProfile(userId: number, data: { name?: string, username?: string, email?: string }): Promise<AuthResponse> {
     try {
       const targetUser = await this.userRepository.findById(userId)
@@ -85,7 +84,6 @@ export class UserService {
     }
   }
 
-  // Edit password diri sendiri (Butuh validasi password lama)
   async updatePassword(userId: number, data: { oldPassword?: string, newPassword?: string }): Promise<AuthResponse> {
     try {
       if (!data.oldPassword || !data.newPassword) {
@@ -95,11 +93,9 @@ export class UserService {
       const targetUser = await this.userRepository.findById(userId)
       if (!targetUser) return { success: false, message: 'User tidak ditemukan' }
 
-      // Cek apakah password lama sesuai
       const isMatch = await bcrypt.compare(data.oldPassword, targetUser.password)
       if (!isMatch) return { success: false, message: 'Password lama salah' }
 
-      // Validasi password baru
       if (!validatePassword(data.newPassword)) {
         return { success: false, message: 'Password baru tidak memenuhi syarat keamanan' }
       }
@@ -116,7 +112,6 @@ export class UserService {
     }
   }
 
-  // Edit user lain (Digunakan oleh Admin/SuperAdmin)
   async updateUser(targetId: number, data: UpdateUserRequest, requestor: UserPayload): Promise<AuthResponse> {
     try {
       const targetUser = await this.userRepository.findById(targetId)
