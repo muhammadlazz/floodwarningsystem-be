@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import { rateLimit } from 'express-rate-limit';
 import { prisma } from './config/database';
 import userRoutes from './routes/userRoutes';
 import feedbackRoutes from './routes/feedbackRoutes';
@@ -12,14 +13,28 @@ import reportRoutes from './routes/reportRoutes';
 import regionUpdateRoutes from './routes/regionUpdateRoutes';
 import bmkgRoutes from './routes/bmkgRoutes';
 import bpbdRoutes from './routes/bpbdRoutes';
+import citraBanjirRoutes from './routes/citraBanjirRoutes';
 import { errorHandler } from './middlewares/errorHandler';
 import { startBbwsSyncJob } from './jobs/bbwsSyncJob';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Global Rate Limiter
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per `window`
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: {
+    success: false,
+    message: 'Terlalu banyak permintaan dari IP ini, silakan coba lagi setelah 15 menit'
+  }
+});
+
 // Security Middleware
 app.use(helmet());
+app.use(limiter);
 app.use(cors({
   origin: process.env.CORS_ORIGIN || '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -33,6 +48,7 @@ app.use('/api', infographicRoutes);
 app.use('/api', bbwsRoutes);
 app.use('/api', bmkgRoutes);
 app.use('/api', bpbdRoutes);
+app.use('/api', citraBanjirRoutes);
 app.use('/api', feedbackRoutes);
 app.use('/api', activityLogRoutes);
 app.use('/api', reportRoutes);

@@ -8,7 +8,19 @@ export class ActivityLogRepository {
 
   async findAll(agencyFilter?: Agency) {
     return await prisma.activityLog.findMany({
-      where: agencyFilter ? { user: { agency: agencyFilter } } : undefined,
+      where: agencyFilter 
+        ? { 
+            OR: [
+              { user: { agency: agencyFilter } },
+              { 
+                userId: null,
+                entity: {
+                  in: ['Report', 'Feedback']
+                }
+              }                    
+            ]
+          } 
+        : undefined,
       include: {
         user: { select: { name: true, agency: true } }
       },

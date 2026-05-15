@@ -125,6 +125,7 @@ export interface ReportUpdateRequest {
 
 export interface RegionUpdateCreateRequest {
   regionName: string
+  recordedAt?: string
   alertStatus?: AlertStatus
   latitude?: number
   longitude?: number

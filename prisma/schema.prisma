@@ -96,6 +96,7 @@ model Report {
 model RegionUpdate {
   id                      Int         @id @default(autoincrement())
   regionName              String
+  recordedAt              DateTime    @default(now())
   alertStatus             AlertStatus @default(AMAN)
   latitude                Float?
   longitude               Float?

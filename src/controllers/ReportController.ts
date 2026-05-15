@@ -5,8 +5,7 @@ export class ReportController {
   private service = new ReportService()
 
   create = async (req: Request, res: Response) => {
-    // FIX: Cast req to any to allow access to user property for Render build
-    const result = await this.service.createReport(req.body, (req as any).user)
+    const result = await this.service.createReport(req.body, req.user)
     return res.status(result.success ? 201 : 400).json(result)
   }
 
@@ -19,8 +18,7 @@ export class ReportController {
     const parsedId = parseInt(req.params.id)
     if (isNaN(parsedId)) return res.status(400).json({ success: false, message: 'Invalid ID' })
 
-    // FIX: Cast req to any to satisfy TypeScript compiler on Render
-    const result = await this.service.updateReport(parsedId, req.body, (req as any).user!)
+    const result = await this.service.updateReport(parsedId, req.body, req.user!)
     return res.status(result.success ? 200 : 400).json(result)
   }
 
@@ -28,8 +26,7 @@ export class ReportController {
     const parsedId = parseInt(req.params.id)
     if (isNaN(parsedId)) return res.status(400).json({ success: false, message: 'Invalid ID' })
 
-    // FIX: Cast req to any to avoid TS2339 build error
-    const result = await this.service.deleteReport(parsedId, (req as any).user!)
+    const result = await this.service.deleteReport(parsedId, req.user!)
     return res.status(result.success ? 200 : 400).json(result)
   }
 }

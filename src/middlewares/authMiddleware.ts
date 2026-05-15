@@ -32,7 +32,7 @@ export const authMiddleware = (
     const decoded = jwt.verify(token, jwtSecret) as UserPayload
 
     // 4. Attach to request
-    (req as any).user = decoded;
+    req.user = decoded;
     next()
     
   } catch (error) {

@@ -16,8 +16,7 @@ export class UserController {
   }
 
   getAllUsers = async (req: Request, res: Response) => {
-    // Keep your 'any' cast for Render compatibility
-    const requestor = (req as any).user
+    const requestor = req.user
     if (!requestor || (requestor.role !== Role.SUPER_ADMIN && requestor.role !== Role.MASTER_ADMIN)) {
       return res.status(403).json({
         success: false,
@@ -30,7 +29,7 @@ export class UserController {
   }
 
   getUserById = async (req: Request, res: Response) => {
-    const requestor = (req as any).user
+    const requestor = req.user
     const parsedId = parseInt(req.params.id)
     
     if (isNaN(parsedId)) return res.status(400).json({ success: false, message: 'Invalid ID format' })
@@ -45,22 +44,20 @@ export class UserController {
   }
 
   createUser = async (req: Request, res: Response) => {
-    // Use your any cast + his cleaned up return logic
-    const result = await this.userService.createUser(req.body, (req as any).user!)
+    const result = await this.userService.createUser(req.body, req.user!)
     return res.status(result.success ? 201 : 403).json(result)
   }
 
   updateUser = async (req: Request, res: Response) => {
-    // New feature from your friend - added any cast
     const parsedId = parseInt(req.params.id)
     if (isNaN(parsedId)) return res.status(400).json({ success: false, message: 'Invalid ID format' })
 
-    const result = await this.userService.updateUser(parsedId, req.body, (req as any).user!)
+    const result = await this.userService.updateUser(parsedId, req.body, req.user!)
     return res.status(result.success ? 200 : 400).json(result)
   }
 
   updateProfile = async (req: Request, res: Response) => {
-    const requestor = (req as any).user
+    const requestor = req.user
     if (!requestor) return res.status(401).json({ success: false, message: 'Unauthorized' })
 
     const result = await this.userService.updateProfile(requestor.id, req.body)
@@ -68,7 +65,7 @@ export class UserController {
   }
 
   updatePassword = async (req: Request, res: Response) => {
-    const requestor = (req as any).user
+    const requestor = req.user
     if (!requestor) return res.status(401).json({ success: false, message: 'Unauthorized' })
 
     const result = await this.userService.updatePassword(requestor.id, req.body)
@@ -79,7 +76,7 @@ export class UserController {
     const parsedId = parseInt(req.params.id)
     if (isNaN(parsedId)) return res.status(400).json({ success: false, message: 'Invalid ID format' })
 
-    const result = await this.userService.deleteUser(parsedId, (req as any).user!)
+    const result = await this.userService.deleteUser(parsedId, req.user!)
     return res.status(result.success ? 200 : 403).json(result)
   }
 }

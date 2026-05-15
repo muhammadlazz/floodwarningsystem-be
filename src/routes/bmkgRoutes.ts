@@ -24,8 +24,8 @@ router.get('/bmkg/rainfall-history', optionalAuthMiddleware, bmkgController.getR
 router.get('/bmkg/users', authMiddleware, userController.getAllUsers)
 router.post('/bmkg/users', authMiddleware, userController.createUser)
 router.delete('/bmkg/users/:id', authMiddleware, userController.deleteUser)
-router.patch('/bmkg/profile', authMiddleware, userController.updateUser)
-router.patch('/bmkg/password', authMiddleware, userController.updateUser)
+router.patch('/bmkg/profile', authMiddleware, userController.updateProfile)
+router.patch('/bmkg/password', authMiddleware, userController.updatePassword)
 router.get('/bmkg/logs', authMiddleware, logController.getLogs)
 router.get('/bmkg/logs/export', authMiddleware, logController.exportLogs)
 

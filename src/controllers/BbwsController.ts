@@ -21,8 +21,8 @@ export class BbwsController {
     const includeInactiveRequested = String(req.query.includeInactive) === 'true'
     const includeInactive =
       includeInactiveRequested &&
-      !!(req as any).user &&
-      ((req as any).user.role === Role.SUPER_ADMIN || (req as any).user.role === Role.MASTER_ADMIN)
+      !!req.user &&
+      (req.user.role === Role.SUPER_ADMIN || req.user.role === Role.MASTER_ADMIN)
 
     const result = await this.bbwsService.listStations({ page, limit, includeInactive })
     if (result.success) return res.status(200).json(result)
@@ -38,8 +38,8 @@ export class BbwsController {
     const includeInactiveRequested = String(req.query.includeInactive) === 'true'
     const includeInactive =
       includeInactiveRequested &&
-      !!(req as any).user &&
-      ((req as any).user.role === Role.SUPER_ADMIN || (req as any).user.role === Role.MASTER_ADMIN)
+      !!req.user &&
+      (req.user.role === Role.SUPER_ADMIN || req.user.role === Role.MASTER_ADMIN)
 
     const result = await this.bbwsService.getStationById(parsedId, { includeInactive })
     if (result.success) return res.status(200).json(result)
@@ -47,7 +47,7 @@ export class BbwsController {
   }
 
   createStation = async (req: Request, res: Response) => {
-    const requestor = (req as any).user
+    const requestor = req.user
     const data: BbwsStationCreateRequest = req.body
     const result = await this.bbwsService.createStation(data, requestor!)
 
@@ -56,7 +56,7 @@ export class BbwsController {
   }
 
   updateStation = async (req: Request, res: Response) => {
-    const requestor = (req as any).user
+    const requestor = req.user
     const parsedId = parseInt(req.params.id)
     if (isNaN(parsedId)) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' })
@@ -71,7 +71,7 @@ export class BbwsController {
   }
 
   deleteStation = async (req: Request, res: Response) => {
-    const requestor = (req as any).user
+    const requestor = req.user
     const parsedId = parseInt(req.params.id)
     if (isNaN(parsedId)) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' })
@@ -107,7 +107,7 @@ export class BbwsController {
   }
 
   createWaterLevel = async (req: Request, res: Response) => {
-    const requestor = (req as any).user
+    const requestor = req.user
     const data: BbwsWaterLevelCreateRequest = req.body
     const result = await this.bbwsService.createWaterLevel(data, requestor!)
 
@@ -117,7 +117,7 @@ export class BbwsController {
   }
 
   updateWaterLevel = async (req: Request, res: Response) => {
-    const requestor = (req as any).user
+    const requestor = req.user
     const parsedId = parseInt(req.params.id)
     if (isNaN(parsedId)) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' })
@@ -133,7 +133,7 @@ export class BbwsController {
   }
 
   deleteWaterLevel = async (req: Request, res: Response) => {
-    const requestor = (req as any).user
+    const requestor = req.user
     const parsedId = parseInt(req.params.id)
     if (isNaN(parsedId)) {
       return res.status(400).json({ success: false, message: 'Invalid ID format' })
@@ -146,7 +146,7 @@ export class BbwsController {
   }
 
   syncNow = async (req: Request, res: Response) => {
-    const user = (req as any).user!
+    const user = req.user!
     if (!(user.role === Role.SUPER_ADMIN || user.role === Role.MASTER_ADMIN)) {
       return res.status(403).json({ success: false, message: 'Anda tidak memiliki akses untuk menjalankan sync' })
     }
@@ -163,7 +163,6 @@ export class BbwsController {
   createDebit = async (req: Request, res: Response) => {
     try {
       const { stationId, debit } = req.body
-      // 2. UBAH DI SINI JUGA
       const data = await this.bbwsService.createDebit(stationId, debit)
       
       await this.logService.logAction(req.user?.id, 'CREATE', 'BbwsDebit', `Input debit air di ${data.station.name}: ${debit} m³/s`)
@@ -177,7 +176,6 @@ export class BbwsController {
   createRainfall = async (req: Request, res: Response) => {
     try {
       const { stationId, rainfall } = req.body
-      // 3. UBAH DI SINI JUGA
       const data = await this.bbwsService.createRainfall(stationId, rainfall)
       
       await this.logService.logAction(req.user?.id, 'CREATE', 'BbwsRainfall', `Input curah hujan di ${data.station.name}: ${rainfall} mm`)
@@ -191,7 +189,6 @@ export class BbwsController {
   getHistoryLive = async (req: Request, res: Response) => {
     try {
       const limit = Number(req.query.limit) || 5
-      // 4. UBAH DI SINI JUGA
       const data = await this.bbwsService.getHistoryLive(limit)
       return res.status(200).json({ success: true, data })
     } catch (error) {

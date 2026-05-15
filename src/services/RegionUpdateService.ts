@@ -1,3 +1,4 @@
+import { prisma } from '../config/database'
 import { RegionUpdateRepository } from '../repositories/RegionUpdateRepository'
 import { ActivityLogService } from './ActivityLogService'
 import { RegionUpdateCreateRequest, RegionUpdateUpdateRequest, UserPayload } from '../types'
@@ -12,7 +13,11 @@ export class RegionUpdateService {
       if (!data.regionName) {
         return { success: false, message: 'Nama wilayah wajib diisi' }
       }
-      const regionUpdate = await this.repository.create(data)
+      
+      // Jika frontend mengirim tanggal spesifik, gunakan itu. Jika tidak, gunakan waktu sekarang.
+      const recordedAt = data.recordedAt ? new Date(data.recordedAt) : new Date()
+
+      const regionUpdate = await this.repository.create({ ...data, recordedAt })
 
       this.logService.logAction(requestor.id, LogAction.CREATE, 'RegionUpdate', `Menambahkan pembaruan wilayah: ${data.regionName}`)
 
@@ -56,6 +61,28 @@ export class RegionUpdateService {
       this.logService.logAction(requestor.id, LogAction.DELETE, 'RegionUpdate', `Menghapus data wilayah: ${existing.regionName}`)
 
       return { success: true, message: 'Data wilayah berhasil dihapus' }
+    } catch (error) {
+      return { success: false, message: (error as Error).message }
+    }
+  }
+
+  async getMapStats(startDate?: string, endDate?: string) {
+    try {
+      // Query data berdasarkan rentang waktu jika diberikan parameter
+      const dateFilter: any = {}
+      if (startDate && endDate) {
+        dateFilter.recordedAt = {
+          gte: new Date(startDate),
+          lte: new Date(endDate)
+        }
+      }
+
+      const updates = await prisma.regionUpdate.findMany({
+        where: dateFilter,
+        orderBy: { recordedAt: 'desc' }
+      })
+
+      return { success: true, data: updates }
     } catch (error) {
       return { success: false, message: (error as Error).message }
     }

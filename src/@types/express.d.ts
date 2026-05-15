@@ -1,13 +1,9 @@
-import { Role } from '../types'; 
+import { UserPayload } from '../types'; 
 
 declare global {
   namespace Express {
     interface Request {
-      user?: {
-        id: number;
-        role: Role;
-        email: string; // Add this line!
-      };
+      user?: UserPayload;
     }
   }
 }
